@@ -1,0 +1,5 @@
+Notice
+
+This Java project uses no externally referenced libraries.
+
+This Java project makes use of Java.Swing and Java.awt for Graphical User Interface purposes.
