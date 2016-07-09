@@ -33,6 +33,7 @@ public class Tetromino extends GameObject {
 		
 		//Generates the tetromino at a valid location with a random shape
 		this.generateShape();
+		this.generateRotation();
 		this.findEmptyPosition();
 		this.setColor();
 	}
@@ -150,6 +151,11 @@ public class Tetromino extends GameObject {
 				this.shape = Shape.ZBLOCK;
 				break;
 		}
+	}
+	
+	public void generateRotation() {
+		int r = (int)(Math.random() * 3.9);
+		this.rotation = r * 90;
 	}
 	
 	/*

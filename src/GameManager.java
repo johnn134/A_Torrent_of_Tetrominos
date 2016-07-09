@@ -2,6 +2,8 @@ import java.util.ArrayList;
 
 /*
  * GameManager.java
+ * 
+ * @author: John Nelson
  */
 
 public class GameManager {
@@ -157,8 +159,10 @@ public class GameManager {
 		
 		gameobjects.clear();
 		numGameObjects = 0;
-		if(score > highscore)
+		if(score > highscore) {
 			highscore = score;
+			SaveDataManager.getInstance().saveData();
+		}
 		setScore(0);
 		
 		gamecontroller.placeCharacter();
@@ -190,12 +194,16 @@ public class GameManager {
 		return score;
 	}
 	
+	public void setScore(int val) {
+		score = val;
+	}
+	
 	public int getHighScore() {
 		return highscore;
 	}
 	
-	public void setScore(int val) {
-		score = val;
+	public void setHighScore(int val) {
+		highscore = val;
 	}
 	
 	/*
@@ -232,7 +240,6 @@ public class GameManager {
 			for(GameObject g: gameobjects) {
 				if(g instanceof Tetromino) {
 					if(g.position.y < -2) {
-						System.out.println("Tetromino has moved offscreen; deleting.");
 						delObjs.add(g);
 					}
 				}

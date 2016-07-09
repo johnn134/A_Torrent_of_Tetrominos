@@ -121,31 +121,32 @@ public class GUIScene extends JPanel {
 	 * @param b - is the game bright or dark
 	 */
 	public void setBrightness(boolean b) {
+		Color back, def, p;
 		bright = b;
+		
+		//Set game colors depending on brightness
 		if(b) {
-			this.setBackground(Color.WHITE);
-			cellBorderColor = Color.WHITE;
-			for(GameCell[] g : worldmanager.getCells()) {
-				for(GameCell c : g) {
-					c.defaultColor = new Color(223, 223, 223);
-					c.color = c.defaultColor;
-					gamecontroller.c.color = Color.BLACK;
-				}
-			}
+			back = Color.WHITE;
+			def = new Color(223, 223, 223);
+			p = Color.BLACK;
 		}
 		else {
-			this.setBackground(Color.BLACK);
-			cellBorderColor = Color.BLACK;
-			for(GameCell[] g : worldmanager.getCells()) {
-				for(GameCell c : g) {
-					c.defaultColor = Color.DARK_GRAY;
-					c.color = c.defaultColor;
-					gamecontroller.c.color = Color.WHITE;
-				}
+			back = Color.BLACK;
+			def = Color.DARK_GRAY;
+			p = Color.WHITE;
+		}
+		
+		this.setBackground(back);
+		cellBorderColor = back;
+		for(GameCell[] g : worldmanager.getCells()) {
+			for(GameCell c : g) {
+				c.defaultColor = def;
+				c.color = c.defaultColor;
+				gamecontroller.c.color = p;
 			}
 		}
 		
-		repaint(0, 0, screenWidth, screenHeight + headerHeight);
+		repaint(0, 0, screenWidth, screenHeight + headerHeight);	//repaint game
 	}
 	
 	/*
@@ -217,17 +218,13 @@ public class GUIScene extends JPanel {
 	}
 	
 	public Dimension getPreferredSize() {
-		return new Dimension(screenWidth, screenHeight + 32);
+		return new Dimension(screenWidth, screenHeight + headerHeight);
 	}
 	
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		
-		//Draw Game Cells
-		int w = worldmanager.getWidth();
-		int h = worldmanager.getHeight();
-		
-		//Draw Character and Tetrominos
+		//Fill game cells with Character and Tetrominos
 		gamecontroller.c.placeCharacter();
 		for(GameObject o : gamemanager.getGameObjects()) {
 			if(o instanceof Tetromino) {
@@ -236,191 +233,240 @@ public class GUIScene extends JPanel {
 		}
 		
 		//Draw Header
-		if(showMenu) {
-			if(bright) {
-				g.setColor(Color.WHITE);
-				g.fillRect(0, 0, screenWidth, headerHeight);
-				
-				g.setColor(Color.BLACK);
-			}
-			else {
-				g.setColor(Color.BLACK);
-				g.fillRect(0, 0, screenWidth, headerHeight);
-				
-				g.setColor(Color.WHITE);
-			}
-	
-			g.setFont(g.getFont().deriveFont(20.0f).deriveFont(Font.BOLD));
-			g.drawString("" + gamemanager.getScore(), screenWidth / 2 - getNumOffset(gamemanager.getScore()), headerHeight - 8);
+		this.paintHeader(g);
+		
+		//Draw Scene
+		if(!showMenu) {
+			//Draw scene
+			this.paintScene(g,  false);
 		}
 		else {
-			if(bright) {
-				g.setColor(Color.WHITE);
-				g.fillRect(0, 0, screenWidth, headerHeight);
-				
-				g.setColor(Color.BLACK);
-			}
-			else {
-				g.setColor(Color.BLACK);
-				g.fillRect(0, 0, screenWidth, headerHeight);
-				
-				g.setColor(Color.WHITE);
-			}
+			//Draw scene
+			this.paintScene(g, true);
+			
+			//Draw menu over scene
+			this.paintMenu(g);
+		}
+	}
+	
+	/*
+	 * paintHeader
+	 * 
+	 * paints the game header to the graphics component
+	 */
+	private void paintHeader(Graphics g) {
+		if(bright) {
+			g.setColor(Color.WHITE);
+			g.fillRect(0, 0, screenWidth, headerHeight);
+			
+			g.setColor(Color.BLACK);
+		}
+		else {
+			g.setColor(Color.BLACK);
+			g.fillRect(0, 0, screenWidth, headerHeight);
+			
+			g.setColor(Color.WHITE);
+		}
+		
+		if(!showMenu) {
 			g.fillRect(7, 7, 16, 3);
 			g.fillRect(7, 13, 16, 3);
 			g.fillRect(7, 19, 16, 3);
-	
-			g.setFont(g.getFont().deriveFont(20.0f).deriveFont(Font.BOLD));
-			g.drawString("" + gamemanager.getScore(), screenWidth / 2 - getNumOffset(gamemanager.getScore()), headerHeight - 8);
 		}
 		
-		//Draw Scene
-		if(showMenu) {
-			int menuX = screenWidth / 4;
-			int menuY = (screenHeight - (screenWidth / 2)) / 2 - 16 + headerHeight;
-			int buttonRound = 8;
-			int buttonSize = 32;
-			
-			//Draw scene
-			for(int i = 0; i < w; i++) {
-				for(int j = 0; j < h; j++) {
+		g.setFont(g.getFont().deriveFont(20.0f).deriveFont(Font.BOLD));
+		g.drawString("" + gamemanager.getScore(), screenWidth / 2 - getNumOffset(gamemanager.getScore()), headerHeight - 8);
+	}
+	
+	/*
+	 * paintScene
+	 * 
+	 * paints the game scene to the graphics component
+	 */
+	private void paintScene(Graphics g, boolean dark) {
+		int w = worldmanager.getWidth();
+		int h = worldmanager.getHeight();
+		
+		for(int i = 0; i < w; i++) {
+			for(int j = 0; j < h; j++) {
+				if(dark)
 					g.setColor(worldmanager.getCell(i, j).color.darker());
-					g.fillRoundRect(screenWidth / w * i, headerHeight + screenHeight / h * (h - j - 1), screenWidth / w, screenHeight / h, roundSize, roundSize);
-					g.setColor(cellBorderColor);
-					g.drawRoundRect(screenWidth / w * i, headerHeight + screenHeight / h * (h - j - 1), screenWidth / w, screenHeight / h, roundSize, roundSize);
-				}
-			}
-			
-			//Draw menu over scene
-			if(bright)
-				g.setColor(Color.WHITE);
-			else
-				g.setColor(Color.GRAY);
-			g.fillRoundRect(menuX, menuY, screenWidth / 2, screenWidth / 2, 16, 16);
-			
-			//Draw Highscore
-			if(bright)
-				g.setColor(Color.BLACK);
-			else
-				g.setColor(Color.WHITE);
-			g.setFont(g.getFont().deriveFont(17.0f));
-			g.drawString("HIGHSCORE", menuX + (screenWidth / 18), menuY + (screenWidth / 8));
-			g.drawString("" + gamemanager.getHighScore(), menuX + (screenWidth / 4) - getNumOffset(gamemanager.getHighScore()), menuY + (screenWidth / 5));
-			
-			//Resume Button
-			g.setColor(new Color(0, 223, 0));
-			g.fillRoundRect(menuX + (screenWidth / 4) - buttonSize / 2, menuY + (screenWidth / 4), buttonSize, buttonSize, buttonRound, buttonRound);
-			
-			g.setColor(new Color(250, 255, 250));
-			int[] xp = {menuX + (screenWidth / 4) - buttonSize / 2 + 6, 
-						menuX + (screenWidth / 4) - buttonSize / 2 + 6, 
-						menuX + (screenWidth / 4) + buttonSize / 2 - 6};
-			int[] yp = {menuY + (screenWidth / 4) + 6, 
-						menuY + (screenWidth / 4) + buttonSize - 6, 
-						menuY + (screenWidth / 4) + buttonSize / 2};
-			g.fillPolygon(xp, yp, 3);
-			
-			//Mute Button
-			if(muted) {
-				//Button Background
-				if(bright)
-					g.setColor(Color.LIGHT_GRAY);
 				else
-					g.setColor(Color.DARK_GRAY);
-				g.fillRoundRect(menuX + (screenWidth / 4)  + buttonSize * 3 / 4, menuY + (screenWidth / 4), buttonSize, buttonSize, buttonRound, buttonRound);
-				
-				//Mute Symbol
-				g.setColor(Color.WHITE);
-				int[] xp2 = {menuX + (screenWidth / 4) + buttonSize * 3 / 4 + buttonSize - 11, 
-							 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + buttonSize - 11, 
-							 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 10};
-				int[] yp2 = {menuY + (screenWidth / 4) + 8, 
-							 menuY + (screenWidth / 4) + buttonSize - 8, 
-							 menuY + (screenWidth / 4) + buttonSize / 2};
-				g.fillPolygon(xp2, yp2, 3);
-				g.fillRect(menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 10, menuY + (screenWidth / 4) + 11, 4, 10);
-				if(bright)
-					g.setColor(Color.LIGHT_GRAY);
-				else
-					g.setColor(Color.DARK_GRAY);
-				g.drawRect(menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 10, menuY + (screenWidth / 4) + 11, 4, 10);
-				
-				//Cancel Symbol
-				g.setColor(Color.RED);
-				g.fillOval(menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 16, menuY + (screenWidth / 4) + 16, 10, 10);
-				if(bright)
-					g.setColor(Color.LIGHT_GRAY);
-				else
-					g.setColor(Color.DARK_GRAY);
-				g.fillOval(menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 17, menuY + (screenWidth / 4) + 17, 8, 8);
-				g.setColor(Color.RED);
-				int[] xp3 = {menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 17, 
-							 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 18, 
-							 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 24, 
-							 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 25};
-				int[] yp3 = {menuY + (screenWidth / 4) + 18, 
-							 menuY + (screenWidth / 4) + 17, 
-							 menuY + (screenWidth / 4) + 25, 
-							 menuY + (screenWidth / 4) + 24};
-				g.fillPolygon(xp3, yp3, 4);
-			}
-			else {
-				//Button Background
-				if(bright)
-					g.setColor(Color.LIGHT_GRAY);
-				else
-					g.setColor(Color.DARK_GRAY);
-				g.fillRoundRect(menuX + (screenWidth / 4)  + buttonSize * 3 / 4, menuY + (screenWidth / 4), buttonSize, buttonSize, buttonRound, buttonRound);
-				
-				//Mute Symbol
-				g.setColor(Color.WHITE);
-				int[] xp2 = {menuX + (screenWidth / 4) + buttonSize * 3 / 4 + buttonSize - 11, 
-							 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + buttonSize - 11, 
-							 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 10};
-				int[] yp2 = {menuY + (screenWidth / 4) + 8, 
-							 menuY + (screenWidth / 4) + buttonSize - 8, 
-							 menuY + (screenWidth / 4) + buttonSize / 2};
-				g.fillPolygon(xp2, yp2, 3);
-				g.fillRect(menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 10, menuY + (screenWidth / 4) + 11, 4, 10);
-				if(bright)
-					g.setColor(Color.LIGHT_GRAY);
-				else
-					g.setColor(Color.DARK_GRAY);
-				g.drawRect(menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 10, menuY + (screenWidth / 4) + 11, 4, 10);
-			}
-			
-			//Brightness Button
-			if(bright) {
-				//Button Background
-				g.setColor(Color.YELLOW);
-				g.fillRoundRect(menuX + (screenWidth / 4) - (buttonSize * 7 / 4), menuY + (screenWidth / 4), buttonSize, buttonSize, buttonRound, buttonRound);
-				
-				//Button Sun Symbol
-				g.setColor(Color.WHITE);
-				g.fillOval(menuX + (screenWidth / 4) - (buttonSize * 7 / 4) + 4, menuY + (screenWidth / 4) + 4, buttonSize - 9, buttonSize - 9);
-			}
-			else {
-				//Button Background
-				g.setColor(Color.DARK_GRAY);
-				g.fillRoundRect(menuX + (screenWidth / 4) - (buttonSize * 7 / 4), menuY + (screenWidth / 4), buttonSize, buttonSize, buttonRound, buttonRound);
-				
-				//Button Moon Symbol
-				g.setColor(Color.WHITE);
-				g.fillOval(menuX + (screenWidth / 4) - (buttonSize * 7 / 4) + 4, menuY + (screenWidth / 4) + 4, buttonSize - 9, buttonSize - 9);
-				g.setColor(Color.DARK_GRAY);
-				g.fillOval(menuX + (screenWidth / 4) - (buttonSize * 7 / 4) + 9, menuY + (screenWidth / 4), buttonSize - 9, buttonSize - 9);
+					g.setColor(worldmanager.getCell(i, j).color);
+				g.fillRoundRect(screenWidth / w * i, headerHeight + screenHeight / h * (h - j - 1), screenWidth / w, screenHeight / h, roundSize, roundSize);
+				g.setColor(cellBorderColor);
+				g.drawRoundRect(screenWidth / w * i, headerHeight + screenHeight / h * (h - j - 1), screenWidth / w, screenHeight / h, roundSize, roundSize);
 			}
 		}
+	}
+	
+	/*
+	 * paintMenu
+	 * 
+	 * paints the menu to the Graphics component
+	 */
+	private void paintMenu(Graphics g) {
+		
+		//Draw menu over scene
+		this.paintMenuBackground(g);
+		
+		//Draw Highscore
+		this.paintHighScore(g);
+		
+		//Resume Button
+		this.paintResumeButton(g);
+		
+		//Mute Button
+		this.paintMuteButton(g);
+		
+		//Brightness Button
+		this.paintBrightnessButton(g);
+	}
+	
+	/*
+	 * paintMenuBackground
+	 * 
+	 * paints the menu background to the Graphis component
+	 */
+	private void paintMenuBackground(Graphics g) {
+		int menuX = screenWidth / 4;
+		int menuY = (screenHeight - (screenWidth / 2)) / 2 - 16 + headerHeight;
+		
+		if(bright)
+			g.setColor(Color.WHITE);
+		else
+			g.setColor(Color.GRAY);
+		g.fillRoundRect(menuX, menuY, screenWidth / 2, screenWidth / 2, 16, 16);
+	}
+	
+	/*
+	 * paintHighScore
+	 * 
+	 * paints the highscore value onto the menu in the Graphics component
+	 */
+	private void paintHighScore(Graphics g) {
+		int menuX = screenWidth / 4;
+		int menuY = (screenHeight - (screenWidth / 2)) / 2 - 16 + headerHeight;
+		
+		if(bright)
+			g.setColor(Color.BLACK);
+		else
+			g.setColor(Color.WHITE);
+		g.setFont(g.getFont().deriveFont(17.0f));
+		g.drawString("HIGHSCORE", menuX + (screenWidth / 18), menuY + (screenWidth / 8));
+		g.drawString("" + gamemanager.getHighScore(), menuX + (screenWidth / 4) - getNumOffset(gamemanager.getHighScore()), menuY + (screenWidth / 5));
+	}
+	
+	/*
+	 * paintResumeButton
+	 * 
+	 * paints the elements of the resume button to the Graphics component
+	 */
+	private void paintResumeButton(Graphics g) {
+		int menuX = screenWidth / 4;
+		int menuY = (screenHeight - (screenWidth / 2)) / 2 - 16 + headerHeight;
+		int buttonRound = 8;
+		int buttonSize = 32;
+		
+		g.setColor(new Color(0, 223, 0));
+		g.fillRoundRect(menuX + (screenWidth / 4) - buttonSize / 2, menuY + (screenWidth / 4), buttonSize, buttonSize, buttonRound, buttonRound);
+		
+		g.setColor(new Color(250, 255, 250));
+		int[] xp = {menuX + (screenWidth / 4) - buttonSize / 2 + 6, 
+					menuX + (screenWidth / 4) - buttonSize / 2 + 6, 
+					menuX + (screenWidth / 4) + buttonSize / 2 - 6};
+		int[] yp = {menuY + (screenWidth / 4) + 6, 
+					menuY + (screenWidth / 4) + buttonSize - 6, 
+					menuY + (screenWidth / 4) + buttonSize / 2};
+		g.fillPolygon(xp, yp, 3);
+	}
+	
+	/*
+	 * paintMuteButton
+	 * 
+	 * paints the elements of the mute button to the Graphics component
+	 */
+	private void paintMuteButton(Graphics g) {
+		int menuX = screenWidth / 4;
+		int menuY = (screenHeight - (screenWidth / 2)) / 2 - 16 + headerHeight;
+		int buttonRound = 8;
+		int buttonSize = 32;
+
+		//Button Background
+		if(bright)
+			g.setColor(Color.LIGHT_GRAY);
+		else
+			g.setColor(Color.DARK_GRAY);
+		g.fillRoundRect(menuX + (screenWidth / 4)  + buttonSize * 3 / 4, menuY + (screenWidth / 4), buttonSize, buttonSize, buttonRound, buttonRound);
+		
+		//Mute Symbol
+		g.setColor(Color.WHITE);
+		int[] xp2 = {menuX + (screenWidth / 4) + buttonSize * 3 / 4 + buttonSize - 11, 
+					 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + buttonSize - 11, 
+					 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 10};
+		int[] yp2 = {menuY + (screenWidth / 4) + 8, 
+					 menuY + (screenWidth / 4) + buttonSize - 8, 
+					 menuY + (screenWidth / 4) + buttonSize / 2};
+		g.fillPolygon(xp2, yp2, 3);
+		g.fillRect(menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 10, menuY + (screenWidth / 4) + 11, 4, 10);
+		if(bright)
+			g.setColor(Color.LIGHT_GRAY);
+		else
+			g.setColor(Color.DARK_GRAY);
+		g.drawRect(menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 10, menuY + (screenWidth / 4) + 11, 4, 10);
+		
+		if(muted) {
+			//Cancel Symbol
+			g.setColor(Color.RED);
+			g.fillOval(menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 16, menuY + (screenWidth / 4) + 16, 10, 10);
+			if(bright)
+				g.setColor(Color.LIGHT_GRAY);
+			else
+				g.setColor(Color.DARK_GRAY);
+			g.fillOval(menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 17, menuY + (screenWidth / 4) + 17, 8, 8);
+			g.setColor(Color.RED);
+			int[] xp3 = {menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 17, 
+						 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 18, 
+						 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 24, 
+						 menuX + (screenWidth / 4) + buttonSize * 3 / 4 + 25};
+			int[] yp3 = {menuY + (screenWidth / 4) + 18, 
+						 menuY + (screenWidth / 4) + 17, 
+						 menuY + (screenWidth / 4) + 25, 
+						 menuY + (screenWidth / 4) + 24};
+			g.fillPolygon(xp3, yp3, 4);
+		}
+	}
+	
+	/*
+	 * paintBrightnessButton
+	 * 
+	 * paints the elements of the brightness button to the Graphics component
+	 */
+	private void paintBrightnessButton(Graphics g) {
+		int menuX = screenWidth / 4;
+		int menuY = (screenHeight - (screenWidth / 2)) / 2 - 16 + headerHeight;
+		int buttonRound = 8;
+		int buttonSize = 32;
+		
+		if(bright) {
+			//Button Background
+			g.setColor(Color.YELLOW);
+			g.fillRoundRect(menuX + (screenWidth / 4) - (buttonSize * 7 / 4), menuY + (screenWidth / 4), buttonSize, buttonSize, buttonRound, buttonRound);
+			
+			//Button Sun Symbol
+			g.setColor(Color.WHITE);
+			g.fillOval(menuX + (screenWidth / 4) - (buttonSize * 7 / 4) + 4, menuY + (screenWidth / 4) + 4, buttonSize - 9, buttonSize - 9);
+		}
 		else {
-			//Draw scene
-			for(int i = 0; i < w; i++) {
-				for(int j = 0; j < h; j++) {
-					g.setColor(worldmanager.getCell(i, j).color);
-					g.fillRoundRect(screenWidth / w * i, headerHeight + screenHeight / h * (h - j - 1), screenWidth / w, screenHeight / h, roundSize, roundSize);
-					g.setColor(cellBorderColor);
-					g.drawRoundRect(screenWidth / w * i, headerHeight + screenHeight / h * (h - j - 1), screenWidth / w, screenHeight / h, roundSize, roundSize);
-				}
-			}
+			//Button Background
+			g.setColor(Color.DARK_GRAY);
+			g.fillRoundRect(menuX + (screenWidth / 4) - (buttonSize * 7 / 4), menuY + (screenWidth / 4), buttonSize, buttonSize, buttonRound, buttonRound);
+			
+			//Button Moon Symbol
+			g.setColor(Color.WHITE);
+			g.fillOval(menuX + (screenWidth / 4) - (buttonSize * 7 / 4) + 4, menuY + (screenWidth / 4) + 4, buttonSize - 9, buttonSize - 9);
+			g.setColor(Color.DARK_GRAY);
+			g.fillOval(menuX + (screenWidth / 4) - (buttonSize * 7 / 4) + 9, menuY + (screenWidth / 4), buttonSize - 9, buttonSize - 9);
 		}
 	}
 	
